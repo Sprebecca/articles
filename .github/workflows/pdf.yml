@@ -1,0 +1,44 @@
+# This is a basic workflow to help you get started with Actions
+
+name: CI
+
+# Controls when the action will run. 
+on:
+  # Triggers the workflow on push or pull request events but only for the master branch
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+name: reveal-pdf
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - 'reveal-js-presentation/*'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    name: Generate PDF
+    steps:
+      - uses: actions/checkout@v2.3.4
+
+      - name: Create "/slides" directory
+        run: mkdir slides && sudo chmod 777 slides
+
+      - name: Build PDF
+        run: docker run --rm -t -v `pwd`:/slides -v ~:/home/user astefanutti/decktape reveal-js-presentation/index.html slides/reveal-js-presentation.pdf
+
+      - name: Deploy
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./slides
+          publish_branch: slides
+          keep_files: true
